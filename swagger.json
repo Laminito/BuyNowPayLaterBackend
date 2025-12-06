@@ -1,0 +1,882 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Furniture Store API",
+    "version": "1.0.0",
+    "description": "API pour le magasin de meubles avec intégration Kredika pour le paiement échelonné",
+    "contact": {
+      "email": "admin@furniture-store.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Serveur de développement"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "API Legacy (compatibilit\u00e9)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "description": "ID unique de l'utilisateur"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Jean"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Dupont"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jean.dupont@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "admin"],
+            "example": "user"
+          },
+          "profile": {
+            "type": "object",
+            "properties": {
+              "dateOfBirth": {
+                "type": "string",
+                "format": "date"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "address": {
+                "type": "object",
+                "properties": {
+                  "street": { "type": "string" },
+                  "city": { "type": "string" },
+                  "postalCode": { "type": "string" },
+                  "country": { "type": "string" }
+                }
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "example": "Canapé d'angle moderne"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "example": 1299
+          },
+          "originalPrice": {
+            "type": "number",
+            "example": 1599
+          },
+          "discount": {
+            "type": "number",
+            "example": 19
+          },
+          "category": {
+            "type": "string",
+            "description": "ID de la catégorie"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "url": { "type": "string" },
+                "publicId": { "type": "string" },
+                "alt": { "type": "string" }
+              }
+            }
+          },
+          "dimensions": {
+            "type": "object",
+            "properties": {
+              "length": { "type": "number" },
+              "width": { "type": "number" },
+              "height": { "type": "number" },
+              "weight": { "type": "number" }
+            }
+          },
+          "materials": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "colors": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sku": {
+            "type": "string",
+            "example": "CANAPE-001"
+          },
+          "inStock": {
+            "type": "boolean"
+          },
+          "stockQuantity": {
+            "type": "number"
+          },
+          "rating": {
+            "type": "object",
+            "properties": {
+              "average": { "type": "number" },
+              "count": { "type": "number" }
+            }
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "example": "Salon"
+          },
+          "slug": {
+            "type": "string",
+            "example": "salon"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "publicId": { "type": "string" }
+            }
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string",
+            "example": "ORD-2024-001"
+          },
+          "user": {
+            "type": "string",
+            "description": "ID de l'utilisateur"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product": { "type": "string" },
+                "quantity": { "type": "number" },
+                "price": { "type": "number" }
+              }
+            }
+          },
+          "totalAmount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]
+          },
+          "shippingAddress": {
+            "type": "object",
+            "properties": {
+              "street": { "type": "string" },
+              "city": { "type": "string" },
+              "postalCode": { "type": "string" },
+              "country": { "type": "string" }
+            }
+          },
+          "kredikaPayment": {
+            "type": "object",
+            "properties": {
+              "paymentId": { "type": "string" },
+              "status": { "type": "string" },
+              "installmentPlan": { "type": "object" }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string",
+            "example": "Message d'erreur"
+          }
+        }
+      },
+      "Success": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Opération réussie"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Inscription d'un nouvel utilisateur",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["firstName", "lastName", "email", "password"],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "example": "Jean"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Dupont"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "jean.dupont@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "motdepasse123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Utilisateur créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "token": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Connexion utilisateur",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "jean.dupont@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "motdepasse123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connexion réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "token": { "type": "string" },
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Identifiants invalides",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Récupérer la liste des produits",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filtrer par catégorie",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "description": "Prix minimum",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "description": "Prix maximum",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Recherche par nom ou description",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Numéro de page",
+            "schema": { "type": "number", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Nombre d'éléments par page",
+            "schema": { "type": "number", "default": 12 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste des produits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "products": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Product" }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": { "type": "number" },
+                        "pages": { "type": "number" },
+                        "count": { "type": "number" },
+                        "total": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Créer un nouveau produit (Admin uniquement)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produit créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "product": { "$ref": "#/components/schemas/Product" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non autorisé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Récupérer un produit par ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID du produit",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Détails du produit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "product": { "$ref": "#/components/schemas/Product" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Produit non trouvé",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Récupérer toutes les catégories",
+        "responses": {
+          "200": {
+            "description": "Liste des catégories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "categories": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Category" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Créer une nouvelle commande",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items", "shippingAddress"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product": { "type": "string" },
+                        "quantity": { "type": "number" }
+                      }
+                    }
+                  },
+                  "shippingAddress": {
+                    "type": "object",
+                    "properties": {
+                      "street": { "type": "string" },
+                      "city": { "type": "string" },
+                      "postalCode": { "type": "string" },
+                      "country": { "type": "string" }
+                    }
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": ["kredika", "card"]
+                  },
+                  "installmentPlan": {
+                    "type": "object",
+                    "description": "Plan d'échelonnement Kredika"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Commande créée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "order": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Récupérer les commandes de l'utilisateur",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commandes récupérées",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": { "type": "integer" },
+                        "totalPages": { "type": "integer" },
+                        "totalItems": { "type": "integer" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Récupérer une commande par ID",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commande récupérée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Commande non trouvée"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Orders"],
+        "summary": "Mettre à jour une commande",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shippingAddress": { "type": "object" },
+                  "paymentMethod": { "type": "string", "enum": ["kredika", "card", "paypal"] },
+                  "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Commande mise à jour",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Commande non trouvée"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Orders"],
+        "summary": "Supprimer une commande (seulement les commandes en attente)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commande supprimée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Commande non trouvée"
+          },
+          "400": {
+            "description": "Impossible de supprimer cette commande"
+          }
+        }
+      }
+    },
+    "/orders/{id}/cancel": {
+      "put": {
+        "tags": ["Orders"],
+        "summary": "Annuler une commande",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Commande annulée",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Commande non trouvée"
+          }
+        }
+      }
+    },
+    "/uploads/image": {
+      "post": {
+        "tags": ["Uploads"],
+        "summary": "Upload d'une image",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Fichier image à uploader"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploadée avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "url": { "type": "string" },
+                    "publicId": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints d'authentification"
+    },
+    {
+      "name": "Products",
+      "description": "Gestion des produits"
+    },
+    {
+      "name": "Categories",
+      "description": "Gestion des catégories"
+    },
+    {
+      "name": "Orders",
+      "description": "Gestion des commandes"
+    },
+    {
+      "name": "Uploads",
+      "description": "Upload de fichiers"
+    }
+  ]
+}
