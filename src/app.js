@@ -28,10 +28,30 @@ const app = express();
 // Middlewares de sécurité et performance
 app.use(helmet());
 app.use(compression());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+
+// Configuration CORS pour Frontend (Multiple Ports) et Webhooks
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      process.env.FRONTEND_PORT_1 || 'http://localhost:5173',
+      process.env.FRONTEND_PORT_2 || 'http://localhost:5174',
+      process.env.FRONTEND_PORT_3 || 'http://localhost:5175',
+      'https://api.kredika.sn'
+    ];
+
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Kredika-Signature']
+};
+
+app.use(cors(corsOptions));
 
 // Logging
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
