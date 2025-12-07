@@ -24,7 +24,31 @@ const getAllProducts = async (req, res) => {
     const filter = { isActive: true };
     
     if (category) {
-      filter.category = category;
+      try {
+        // Chercher la catégorie par slug ou par ID
+        let categoryDoc = null;
+        
+        // D'abord chercher par slug (string exact)
+        categoryDoc = await Category.findOne({ slug: category });
+        
+        // Si pas trouvé, essayer par ID (si c'est un ObjectId valide)
+        if (!categoryDoc && category.length === 24) {
+          try {
+            categoryDoc = await Category.findById(category);
+          } catch (e) {
+            // Invalid ObjectId, continuer
+          }
+        }
+        
+        if (categoryDoc) {
+          filter.category = categoryDoc._id;
+        } else {
+          return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+      } catch (err) {
+        console.error('Error finding category:', err.message);
+        return res.status(400).json({ success: false, message: 'Invalid category' });
+      }
     }
     
     if (minPrice || maxPrice) {
@@ -87,7 +111,8 @@ const getAllProducts = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in getAllProducts:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

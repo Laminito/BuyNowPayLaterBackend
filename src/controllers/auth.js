@@ -18,7 +18,7 @@ const register = async (req, res, next) => {
       });
     }
 
-    const { name, email, password, phone, role } = req.body;
+    const { name, firstName, lastName, email, password, phone, role } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -29,9 +29,11 @@ const register = async (req, res, next) => {
       });
     }
 
-    // Create user
+    // Create user - accept either name or firstName
     const user = await User.create({
-      name,
+      name: name || firstName,
+      firstName: firstName || name,
+      lastName: lastName,
       email,
       password,
       phone,

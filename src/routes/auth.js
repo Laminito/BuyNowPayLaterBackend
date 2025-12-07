@@ -19,9 +19,17 @@ const router = express.Router();
  * @access  Public
  */
 router.post('/register', [
-  body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  // Accept either name, or firstName/lastName
+  body().custom((value) => {
+    const hasName = value.name && value.name.trim() !== '';
+    const hasFirstName = value.firstName && value.firstName.trim() !== '';
+    if (!hasName && !hasFirstName) {
+      throw new Error('Name or firstName is required');
+    }
+    return true;
+  })
 ], register);
 
 /**
