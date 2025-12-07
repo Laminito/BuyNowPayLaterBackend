@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const emailService = require('../services/emailService');
 const crypto = require('node:crypto');
 
 // @desc    Register user
@@ -36,6 +37,14 @@ const register = async (req, res, next) => {
       phone,
       role: role || 'user'
     });
+
+    // Send welcome email
+    try {
+      await emailService.sendWelcomeEmail(user);
+    } catch (emailError) {
+      console.log('⚠️ Welcome email not sent:', emailError.message);
+      // Continue with registration even if email fails
+    }
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
@@ -148,13 +157,27 @@ const forgotPassword = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // In production, you would send an email with the reset URL
-    // For now, we'll just return the token for testing
-    res.status(200).json({
-      success: true,
-      message: 'Password reset token generated',
-      resetToken: resetToken // Remove this in production
-    });
+    // Send email with reset token
+    try {
+      await emailService.sendPasswordResetEmail(user, resetToken);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Email sent with reset token'
+      });
+    } catch (emailError) {
+      console.error('❌ Error sending password reset email:', emailError.message);
+      
+      // Clear the reset token if email fails
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(500).json({
+        success: false,
+        error: 'Email could not be sent'
+      });
+    }
   } catch (error) {
     next(error);
   }
@@ -198,6 +221,49 @@ const resetPassword = async (req, res, next) => {
     user.resetPasswordExpire = undefined;
     await user.save();
 
+    // Send confirmation email
+    try {
+      await emailService.sendEmail(
+        user.email,
+        'Mot de passe réinitialisé avec succès',
+        `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #27ae60; color: #fff; padding: 20px; border-radius: 5px; text-align: center; }
+                .content { padding: 20px; }
+                .footer { background-color: #ecf0f1; padding: 20px; text-align: center; font-size: 12px; border-radius: 5px; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>Mot de passe réinitialisé ✓</h1>
+                </div>
+                <div class="content">
+                  <p>Bonjour ${user.firstName || user.name},</p>
+                  <p>Votre mot de passe a été réinitialisé avec succès!</p>
+                  <p>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+                  <p>Si vous n'avez pas effectué cette modification, veuillez contacter notre support immédiatement.</p>
+                </div>
+                <div class="footer">
+                  <p>&copy; 2025 Buy Now Pay Later. Tous droits réservés.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+        `Votre mot de passe a été réinitialisé avec succès`
+      );
+    } catch (emailError) {
+      console.log('⚠️ Password confirmation email not sent:', emailError.message);
+      // Continue anyway, password was reset successfully
+    }
+
     sendTokenResponse(user, 200, res);
   } catch (error) {
     next(error);
@@ -230,6 +296,47 @@ const updatePassword = async (req, res, next) => {
 
     user.password = req.body.newPassword;
     await user.save();
+
+    // Send password changed confirmation email
+    try {
+      await emailService.sendEmail(
+        user.email,
+        'Mot de passe mis à jour',
+        `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #3498db; color: #fff; padding: 20px; border-radius: 5px; text-align: center; }
+                .content { padding: 20px; }
+                .footer { background-color: #ecf0f1; padding: 20px; text-align: center; font-size: 12px; border-radius: 5px; margin-top: 20px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>Mot de passe mis à jour</h1>
+                </div>
+                <div class="content">
+                  <p>Bonjour ${user.firstName || user.name},</p>
+                  <p>Votre mot de passe a été mis à jour avec succès!</p>
+                  <p>Si vous n'avez pas effectué cette modification, veuillez contacter notre support immédiatement.</p>
+                </div>
+                <div class="footer">
+                  <p>&copy; 2025 Buy Now Pay Later. Tous droits réservés.</p>
+                </div>
+              </div>
+            </body>
+          </html>
+        `,
+        `Votre mot de passe a été mis à jour`
+      );
+    } catch (emailError) {
+      console.log('⚠️ Password update confirmation email not sent:', emailError.message);
+    }
 
     sendTokenResponse(user, 200, res);
   } catch (error) {

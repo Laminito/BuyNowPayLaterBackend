@@ -31,7 +31,7 @@ const uploadProductImages = multer({
 const uploadAvatar = multer({
   storage,
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB
+    fileSize: 10 * 1024 * 1024 // 10MB
   },
   fileFilter: imageFilter
 }).single('avatar');

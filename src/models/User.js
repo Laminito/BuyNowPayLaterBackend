@@ -4,9 +4,18 @@ const jwt = require('jsonwebtoken');
 const crypto = require('node:crypto');
 
 const UserSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'First name cannot be more than 50 characters']
+  },
+  lastName: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Last name cannot be more than 50 characters']
+  },
   name: {
     type: String,
-    required: [true, 'Please add a name'],
     trim: true,
     maxlength: [50, 'Name cannot be more than 50 characters']
   },
@@ -24,6 +33,27 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
     match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please add a valid phone number']
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  city: {
+    type: String,
+    trim: true
+  },
+  postalCode: {
+    type: String,
+    trim: true
+  },
+  country: {
+    type: String,
+    trim: true
+  },
+  avatar: {
+    type: String,
+    default: null,
+    description: 'Path to user avatar image'
   },
   password: {
     type: String,

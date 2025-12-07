@@ -1,0 +1,166 @@
+{
+  "users": [
+    {
+      "description": "Admin utilisateur",
+      "firstName": "Admin",
+      "lastName": "Furniture Store",
+      "email": "admin@furniture-store.com",
+      "password": "AdminPassword123!",
+      "phone": "+221771234567",
+      "role": "admin"
+    },
+    {
+      "description": "Utilisateur 1 - Test",
+      "firstName": "Jean",
+      "lastName": "Dupont",
+      "email": "jean.dupont@test.com",
+      "password": "JeanPassword123!",
+      "phone": "+221771111111"
+    },
+    {
+      "description": "Utilisateur 2 - Test",
+      "firstName": "Marie",
+      "lastName": "Martin",
+      "email": "marie.martin@test.com",
+      "password": "MariePassword123!",
+      "phone": "+221772222222"
+    },
+    {
+      "description": "Utilisateur 3 - Test",
+      "firstName": "Pierre",
+      "lastName": "Bernard",
+      "email": "pierre.bernard@test.com",
+      "password": "PierrePassword123!",
+      "phone": "+221773333333"
+    },
+    {
+      "description": "Utilisateur 4 - Test",
+      "firstName": "Sophie",
+      "lastName": "Laurent",
+      "email": "sophie.laurent@test.com",
+      "password": "SophiePassword123!",
+      "phone": "+221774444444"
+    },
+    {
+      "description": "Utilisateur 5 - Test",
+      "firstName": "Marc",
+      "lastName": "Moreau",
+      "email": "marc.moreau@test.com",
+      "password": "MarcPassword123!",
+      "phone": "+221775555555"
+    },
+    {
+      "description": "Utilisateur 6 - Test",
+      "firstName": "Claudia",
+      "lastName": "Dubois",
+      "email": "claudia.dubois@test.com",
+      "password": "ClaudiaPassword123!",
+      "phone": "+221776666666"
+    },
+    {
+      "description": "Utilisateur 7 - Test",
+      "firstName": "Robert",
+      "lastName": "Lefevre",
+      "email": "robert.lefevre@test.com",
+      "password": "RobertPassword123!",
+      "phone": "+221777777777"
+    },
+    {
+      "description": "Utilisateur 8 - Test",
+      "firstName": "Valerie",
+      "lastName": "Fontaine",
+      "email": "valerie.fontaine@test.com",
+      "password": "ValeriePassword123!",
+      "phone": "+221778888888"
+    },
+    {
+      "description": "Utilisateur 9 - Test",
+      "firstName": "Thomas",
+      "lastName": "Girard",
+      "email": "thomas.girard@test.com",
+      "password": "ThomasPassword123!",
+      "phone": "+221779999999"
+    },
+    {
+      "description": "Utilisateur 10 - Test",
+      "firstName": "Nicole",
+      "lastName": "Leroy",
+      "email": "nicole.leroy@test.com",
+      "password": "NicolePassword123!",
+      "phone": "+221780000000"
+    }
+  ],
+  "examples": {
+    "curl_register": {
+      "description": "Exemple cURL pour créer un utilisateur",
+      "command": "curl -X POST http://localhost:3000/api/auth/register \\",
+      "headers": [
+        "-H 'Content-Type: application/json'"
+      ],
+      "body": {
+        "firstName": "Jean",
+        "lastName": "Dupont",
+        "email": "jean.dupont@test.com",
+        "password": "JeanPassword123!",
+        "phone": "+221771111111"
+      }
+    },
+    "postman": {
+      "description": "Importer dans Postman",
+      "method": "POST",
+      "url": "http://localhost:3000/api/auth/register",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": {
+        "firstName": "Jean",
+        "lastName": "Dupont",
+        "email": "jean.dupont@test.com",
+        "password": "JeanPassword123!",
+        "phone": "+221771111111"
+      }
+    },
+    "javascript_fetch": {
+      "description": "Exemple JavaScript/React",
+      "code": "const user = {\n  firstName: 'Jean',\n  lastName: 'Dupont',\n  email: 'jean.dupont@test.com',\n  password: 'JeanPassword123!',\n  phone: '+221771111111'\n};\n\nfetch('http://localhost:3000/api/auth/register', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify(user)\n})\n.then(res => res.json())\n.then(data => console.log('Utilisateur créé:', data))\n.catch(err => console.error('Erreur:', err));"
+    },
+    "axios": {
+      "description": "Exemple avec Axios",
+      "code": "import axios from 'axios';\n\nconst API = axios.create({\n  baseURL: 'http://localhost:3000/api'\n});\n\nconst user = {\n  firstName: 'Jean',\n  lastName: 'Dupont',\n  email: 'jean.dupont@test.com',\n  password: 'JeanPassword123!',\n  phone: '+221771111111'\n};\n\nAPI.post('/auth/register', user)\n  .then(res => {\n    console.log('Utilisateur créé:', res.data);\n    localStorage.setItem('token', res.data.token);\n  })\n  .catch(err => console.error('Erreur:', err.response.data));"
+    }
+  },
+  "notes": {
+    "password_requirements": "Au minimum 8 caractères avec majuscule, minuscule, chiffre et caractère spécial",
+    "phone_format": "Format international recommandé (ex: +221771234567)",
+    "email_format": "Email valide et unique",
+    "response_success": {
+      "status": 201,
+      "data": {
+        "success": true,
+        "token": "JWT_TOKEN",
+        "user": {
+          "_id": "ObjectId",
+          "firstName": "Jean",
+          "lastName": "Dupont",
+          "email": "jean.dupont@test.com",
+          "phone": "+221771111111",
+          "role": "user",
+          "isActive": true,
+          "createdAt": "2025-12-06T20:45:00Z"
+        }
+      }
+    },
+    "response_error": {
+      "status": 400,
+      "data": {
+        "message": "Validation failed",
+        "errors": [
+          {
+            "param": "email",
+            "msg": "Email already in use"
+          }
+        ]
+      }
+    }
+  }
+}

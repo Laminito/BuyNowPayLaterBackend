@@ -1,24 +1,20 @@
-const uploadService = require('../services/uploadService');
+const localUploadService = require('../services/localUploadService');
 const User = require('../models/User');
 
 const uploadAvatar = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
     // Supprimer l'ancien avatar s'il existe
     const user = await User.findById(req.user.id);
     if (user.avatar) {
-      const publicIdMatch = user.avatar.match(/\/([^/]+)\.[^.]+$/);
-      if (publicIdMatch) {
-        const publicId = `avatars/${publicIdMatch[1]}`;
-        await uploadService.deleteImage(publicId);
-      }
+      await localUploadService.deleteImage(user.avatar);
     }
 
     // Upload du nouveau avatar
-    const uploadResult = await uploadService.uploadAvatar(req.file);
+    const uploadResult = await localUploadService.uploadAvatar(req.file);
 
     // Mettre à jour l'utilisateur
     user.avatar = uploadResult.url;
@@ -30,17 +26,22 @@ const uploadAvatar = async (req, res) => {
       message: 'Avatar updated successfully'
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 };
 
 const uploadProductImages = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: 'No files uploaded' });
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
 
-    const uploadResults = await uploadService.uploadProductImages(req.files);
+    const uploadResults = await localUploadService.uploadProductImages(req.files);
 
     res.json({
       success: true,
@@ -48,17 +49,22 @@ const uploadProductImages = async (req, res) => {
       message: 'Images uploaded successfully'
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Upload images error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 };
 
 const uploadProductVideo = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'No video file uploaded' });
+      return res.status(400).json({ success: false, message: 'No video file uploaded' });
     }
 
-    const uploadResult = await uploadService.uploadProductVideo(req.file);
+    const uploadResult = await localUploadService.uploadProductVideo(req.file);
 
     res.json({
       success: true,
@@ -66,17 +72,22 @@ const uploadProductVideo = async (req, res) => {
       message: 'Video uploaded successfully'
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Upload video error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 };
 
 const uploadProductMedia = async (req, res) => {
   try {
     if (!req.files || (!req.files.images && !req.files.video)) {
-      return res.status(400).json({ message: 'No files uploaded' });
+      return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
 
-    const uploadResults = await uploadService.uploadProductMedia(req.files);
+    const uploadResults = await localUploadService.uploadProductMedia(req.files);
 
     res.json({
       success: true,
@@ -84,28 +95,39 @@ const uploadProductMedia = async (req, res) => {
       message: 'Media uploaded successfully'
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Upload media error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
 };
 
 const deleteImage = async (req, res) => {
   try {
-    const { publicId } = req.params;
+    const { filePath } = req.params;
     
-    if (!publicId) {
-      return res.status(400).json({ message: 'Public ID is required' });
+    if (!filePath) {
+      return res.status(400).json({ success: false, message: 'File path is required' });
     }
 
-    await uploadService.deleteImage(publicId);
+    const result = await localUploadService.deleteImage(filePath);
 
-    res.json({
-      success: true,
-      message: 'Image deleted successfully'
-    });
+    if (result.success) {
+      res.json({ success: true, message: 'Image deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: result.message });
+    }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Delete image error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message,
+      error: process.env.NODE_ENV === 'development' ? error : undefined
+    });
   }
-};
+}
 
 module.exports = {
   uploadAvatar,

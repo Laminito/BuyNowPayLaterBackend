@@ -3,7 +3,11 @@ const { body } = require('express-validator');
 const {
   register,
   login,
-  getMe
+  logout,
+  getMe,
+  updatePassword,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/auth');
 const { protect } = require('../middleware/auth');
 
@@ -37,7 +41,39 @@ router.post('/login', [
  */
 router.get('/me', protect, getMe);
 
-// TODO: Ajouter la fonction updateProfile dans le contrôleur
-// router.put('/profile', protect, updateProfile);
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Logout user
+ * @access  Private
+ */
+router.post('/logout', protect, logout);
+
+/**
+ * @route   PUT /api/auth/update-password
+ * @desc    Update user password (requires current password)
+ * @access  Private
+ */
+router.put('/update-password', protect, [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
+], updatePassword);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Request password reset token
+ * @access  Public
+ */
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Valid email is required')
+], forgotPassword);
+
+/**
+ * @route   PUT /api/auth/reset-password/:resettoken
+ * @desc    Reset password using token
+ * @access  Public
+ */
+router.put('/reset-password/:resettoken', [
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+], resetPassword);
 
 module.exports = router;

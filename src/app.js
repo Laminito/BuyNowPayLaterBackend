@@ -6,7 +6,7 @@ const compression = require('compression');
 const swaggerUi = require('swagger-ui-express');
 
 // Import Swagger config
-const swaggerDocument = require('../swagger.json');
+const swaggerSpec = require('./swagger');
 
 // Import des routes
 const authRoutes = require('./routes/auth');
@@ -26,7 +26,19 @@ const notFound = require('./middleware/notFound');
 const app = express();
 
 // Middlewares de sécurité et performance
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false, // Permet les ressources cross-origin
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:', 'http:'],
+      fontSrc: ["'self'", 'data:'],
+      connectSrc: ["'self'", 'http:', 'https:']
+    }
+  } : false
+}));
 app.use(compression());
 
 // Configuration CORS pour Frontend (Multiple Ports) et Webhooks
@@ -48,13 +60,28 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Kredika-Signature']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Kredika-Signature'],
+  exposedHeaders: ['Content-Type', 'Content-Length'],
+  maxAge: 86400 // 24 hours
 };
 
 app.use(cors(corsOptions));
 
+// Headers de sécurité additionnels pour les uploads
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.get('origin'));
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Embedder-Policy', 'require-corp');
+  next();
+});
+
 // Logging
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// Servir les fichiers statiques (uploads)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Parsing du body (webhook Kredika nécessite raw pour la signature)
 app.use('/api/webhooks', express.raw({ type: 'application/json' }));
@@ -90,7 +117,7 @@ app.use('/api/categories', categoryRoutes);
 
 // Swagger Documentation
 app.use('/api/docs', swaggerUi.serve);
-app.get('/api/docs', swaggerUi.setup(swaggerDocument));
+app.get('/api/docs', swaggerUi.setup(swaggerSpec));
 
 // Route de santé
 app.get('/health', (req, res) => {
@@ -125,7 +152,7 @@ app.get('/', (req, res) => {
 // Swagger JSON file
 app.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerDocument);
+  res.send(swaggerSpec);
 });
 
 // Middleware de gestion d'erreurs
