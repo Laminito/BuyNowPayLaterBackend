@@ -146,7 +146,7 @@ const options = {
       }
     ]
   },
-  apis: ['./src/routes/*.js', './src/swagger-routes.js', './src/swagger-categories-products.js']
+  apis: ['./src/routes/*.js', './src/swagger-routes.js', './src/swagger-categories-products.js', './src/swagger-credit.js']
 };
 
 const swaggerSpec = swaggerJsdoc(options);

@@ -1,0 +1,245 @@
+{
+  "name": "Furniture Market - Marché de l'Ameublement",
+  "contactEmail": "contact@furnituremarket.sn",
+  "contactPhone": "+221771234567",
+  "callbackUrl": "https://api.furnituremarket.sn/kredika/webhooks/payments",
+  "commissionRate": 3.0,
+  "maxCreditAmount": 1000000.0,
+  "maxDurationMonths": 24,
+  "active": true,
+  "description": "Plateforme leader de vente de meubles au Sénégal - Solutions de crédit flexible pour l'ameublement résidentiel et commercial",
+  "businessSector": "FURNITURE_RETAIL",
+  "registrationNumber": "SN-FURNITURE-MARKET-2024-001",
+  "paymentMethods": {
+    "mobileMoneyProviders": [
+      {
+        "provider": "WAVE",
+        "enabled": true,
+        "displayName": "Wave",
+        "merchantCode": "FURNITURE_WAVE_001",
+        "merchantName": "Furniture Market Sénégal",
+        "merchantPhone": "+221771234567",
+        "logoUrl": "https://api.furnituremarket.sn/assets/payment/wave.png",
+        "brandColor": "#00D9A5",
+        "ussdCode": "#144#",
+        "ussdTemplate": "#144#{amount}*{merchant}*{reference}#",
+        "fees": {
+          "type": "PERCENTAGE",
+          "value": 1.0,
+          "minAmount": 0,
+          "maxAmount": 5000,
+          "paidBy": "CUSTOMER"
+        },
+        "instructions": {
+          "fr": "Ouvrez votre application Wave, allez dans Payer et scannez le QR code ou entrez le numéro marchand pour payer votre échéance.",
+          "wo": "Ubbi Wave, tobbal ci Payer te duggal numero bi walla scan QR code bi.",
+          "en": "Open Wave app, tap Pay and scan the QR code or enter the merchant number to pay your installment."
+        },
+        "paymentSteps": {
+          "fr": [
+            "Ouvrez l'application Wave",
+            "Appuyez sur Payer",
+            "Entrez le numéro: +221771234567",
+            "Montant: voir sur votre avis d'échéance",
+            "Référence: numéro d'échéance Kredika",
+            "Validez avec votre code PIN"
+          ],
+          "wo": [
+            "Ubbi application Wave",
+            "Tobbal ci Fey",
+            "Duggal numero: +221771234567",
+            "Montant: gis ci sa avis d'échéance",
+            "Référence: numéro d'échéance Kredika",
+            "Validé ak sa code PIN"
+          ],
+          "en": [
+            "Open Wave app",
+            "Tap Pay",
+            "Enter number: +221771234567",
+            "Amount: see on your payment notice",
+            "Reference: Kredika installment number",
+            "Confirm with your PIN"
+          ]
+        }
+      },
+      {
+        "provider": "ORANGE_MONEY",
+        "enabled": true,
+        "displayName": "Orange Money",
+        "merchantCode": "FURNITURE_OM_001",
+        "merchantName": "Furniture Market Sénégal",
+        "merchantPhone": "+221773456789",
+        "logoUrl": "https://api.furnituremarket.sn/assets/payment/orange-money.png",
+        "brandColor": "#FF6600",
+        "ussdCode": "#144#",
+        "ussdTemplate": "#144#1*1*{merchant}*{amount}*{reference}#",
+        "fees": {
+          "type": "TIERED",
+          "tiers": [
+            {
+              "minAmount": 0,
+              "maxAmount": 5000,
+              "feeAmount": 100
+            },
+            {
+              "minAmount": 5001,
+              "maxAmount": 25000,
+              "feePercentage": 1.5
+            },
+            {
+              "minAmount": 25001,
+              "maxAmount": null,
+              "feePercentage": 1.0
+            }
+          ],
+          "paidBy": "CUSTOMER"
+        },
+        "instructions": {
+          "fr": "Composez #144#, sélectionnez Paiement marchand et suivez les instructions pour payer votre échéance.",
+          "wo": "Duggal #144#, tànn Paiement marchand te topp ay instructions yi.",
+          "en": "Dial #144#, select Merchant Payment and follow the instructions to pay your installment."
+        },
+        "paymentSteps": {
+          "fr": [
+            "Composez #144# sur votre téléphone",
+            "Sélectionnez Paiement marchand",
+            "Entrez le code marchand: FURNITURE_OM_001",
+            "Entrez le montant de l'échéance",
+            "Entrez la référence d'échéance",
+            "Validez avec votre code secret"
+          ],
+          "wo": [
+            "Duggal #144# ci sa telefon",
+            "Tànn Paiement marchand",
+            "Duggal code marchand: FURNITURE_OM_001",
+            "Duggal montant sa échéance",
+            "Duggal référence échéance",
+            "Validé ak sa code secret"
+          ],
+          "en": [
+            "Dial #144# on your phone",
+            "Select Merchant Payment",
+            "Enter merchant code: FURNITURE_OM_001",
+            "Enter installment amount",
+            "Enter installment reference",
+            "Confirm with your secret code"
+          ]
+        }
+      }
+    ],
+    "bankTransfer": {
+      "enabled": true,
+      "bankName": "Banque Atlantique Sénégal",
+      "accountName": "Furniture Market SARL",
+      "accountNumber": "SN98765432101234567890",
+      "iban": "SN08SN0100152000098765432101234",
+      "swiftCode": "CBAOSNDA",
+      "logoUrl": "https://api.furnituremarket.sn/assets/payment/bank.png",
+      "processingTime": "24-48h",
+      "fees": {
+        "type": "FIXED",
+        "value": 500,
+        "paidBy": "CUSTOMER"
+      },
+      "instructions": {
+        "fr": "Effectuez un virement bancaire en mentionnant la référence d'échéance Kredika.",
+        "wo": "Def virement bancaire bi te boolé référence échéance Kredika.",
+        "en": "Make a bank transfer mentioning the Kredika installment reference."
+      },
+      "paymentSteps": {
+        "fr": [
+          "Connectez-vous à votre banque en ligne",
+          "Sélectionnez Nouveau virement",
+          "Banque: Banque Atlantique Sénégal",
+          "Bénéficiaire: Furniture Market SARL",
+          "IBAN: SN08SN0100152000098765432101234",
+          "Montant: voir sur votre avis d'échéance",
+          "Référence: OBLIGATOIRE - voir sur votre avis",
+          "Confirmez le virement"
+        ],
+        "wo": [
+          "Cëkk sa banque en ligne",
+          "Tànn Nouveau virement",
+          "Banque: Banque Atlantique Sénégal",
+          "Bénéficiaire: Furniture Market SARL",
+          "IBAN: SN08SN0100152000098765432101234",
+          "Montant: gis ci sa avis d'échéance",
+          "Référence: OBLIGATOIRE - gis ci sa avis",
+          "Validé virement bi"
+        ],
+        "en": [
+          "Log in to your online banking",
+          "Select New transfer",
+          "Bank: Banque Atlantique Sénégal",
+          "Beneficiary: Furniture Market SARL",
+          "IBAN: SN08SN0100152000098765432101234",
+          "Amount: see on your payment notice",
+          "Reference: REQUIRED - see on your notice",
+          "Confirm the transfer"
+        ]
+      }
+    },
+    "cash": {
+      "enabled": true,
+      "instructions": {
+        "fr": "Présentez-vous à l'un de nos points de paiement avec votre référence d'échéance et votre pièce d'identité.",
+        "wo": "Ñëw ci benn ci sunu points yi ak sa référence échéance bi ak sa carte identité.",
+        "en": "Visit one of our payment points with your installment reference and ID card."
+      },
+      "locations": [
+        {
+          "name": "Furniture Market Showroom - Plateau",
+          "address": "Avenue Léopold Sédar Senghor, Dakar Plateau",
+          "city": "Dakar",
+          "phone": "+221338765432",
+          "openingHours": "Lundi-Samedi: 9h-19h, Dimanche: 10h-14h",
+          "latitude": 14.6928,
+          "longitude": -17.4467
+        },
+        {
+          "name": "Furniture Market - Almadies",
+          "address": "Route de Ngor, Les Almadies",
+          "city": "Dakar",
+          "phone": "+221338765433",
+          "openingHours": "Lundi-Samedi: 9h-20h",
+          "latitude": 14.7196,
+          "longitude": -17.4947
+        },
+        {
+          "name": "Furniture Market - Thiès",
+          "address": "Rue Blaise Diagne, Thiès",
+          "city": "Thiès",
+          "phone": "+221771234570",
+          "openingHours": "Lundi-Samedi: 8h-18h",
+          "latitude": 14.7929,
+          "longitude": -16.9476
+        },
+        {
+          "name": "Furniture Market - Kaolack",
+          "address": "Avenue de la Paix, Kaolack",
+          "city": "Kaolack",
+          "phone": "+221775678901",
+          "openingHours": "Lundi-Samedi: 8h-17h",
+          "latitude": 13.9691,
+          "longitude": -16.0170
+        },
+        {
+          "name": "Furniture Market - Kolda",
+          "address": "Rue Mamadou Dia, Kolda",
+          "city": "Kolda",
+          "phone": "+221776543210",
+          "openingHours": "Lundi-Samedi: 8h-17h",
+          "latitude": 13.0634,
+          "longitude": -14.9412
+        }
+      ]
+    },
+    "preferredMethod": "WAVE",
+    "displayOrder": [
+      "WAVE",
+      "ORANGE_MONEY",
+      "BANK_TRANSFER",
+      "CASH"
+    ]
+  }
+}
