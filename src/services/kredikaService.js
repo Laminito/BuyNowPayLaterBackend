@@ -227,16 +227,18 @@ class KredikaService {
     try {
       await this.ensureValidToken();
 
-      // NOTE: partnerId IS required - captured from authentication response
+      // Format exact attendu par Kredika
       const payload = {
-        partnerId: this.partnerId, // 🔥 Required by Kredika API
+        partnerId: this.partnerId,
         externalOrderRef: reservationData.externalOrderRef,
         externalCustomerRef: reservationData.externalCustomerRef,
         purchaseAmount: parseFloat(reservationData.purchaseAmount),
         installmentCount: parseInt(reservationData.installmentCount) || 6,
-        notes: reservationData.notes || '',
-        totalActiveCredits: parseFloat(reservationData.totalActiveCredits) || 0
+        notes: reservationData.notes || ''
       };
+
+      console.log('\n📤 Sending Kredika reservation payload:');
+      console.log(JSON.stringify(payload, null, 2));
 
       const response = await this.axiosInstance.post(
         '/credits/reservations',

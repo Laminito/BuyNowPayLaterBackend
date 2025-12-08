@@ -80,15 +80,13 @@ const createOrder = async (req, res) => {
 
         console.log('📝 Création d\'une réservation Kredika pour la commande:', externalOrderRef);
 
-        // Créer la réservation Kredika
+        // Créer la réservation Kredika avec le format exact attendu
         const kredikaReservation = await kredikaService.createReservation({
           externalOrderRef,
           externalCustomerRef,
           purchaseAmount: Math.round(total * 100), // Montant en centimes
           installmentCount: installments,
-          customerEmail: req.user.email,
-          customerFirstName: req.user.firstName,
-          customerLastName: req.user.lastName
+          notes: `Order for ${req.user.firstName} ${req.user.lastName} - ${shippingAddress.city}`
         });
 
         console.log('✅ Réservation Kredika créée:', {
