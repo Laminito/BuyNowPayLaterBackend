@@ -75,12 +75,13 @@ class KredikaService {
         this.accessToken = response.data.accessToken;
         this.refreshToken = response.data.refreshToken;
         this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
-        this.partnerId = response.data.partnerId; // 🔥 Capture partnerId from auth response
+        // 🔥 The partnerId to send in API calls is the clientId itself (pk_*)
+        this.partnerId = clientId;
 
         console.log('✅ Kredika OAuth2 authentication successful');
         console.log(`   Token expires in: ${response.data.expiresIn}s`);
         console.log(`   Scope: ${response.data.scope}`);
-        console.log(`   Partner ID: ${this.partnerId}`);
+        console.log(`   Partner ID (for API): ${this.partnerId}`);
         this.authMode = 'OAUTH2';
         return response.data;
       }
