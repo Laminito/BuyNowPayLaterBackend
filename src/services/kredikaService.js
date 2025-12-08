@@ -8,7 +8,7 @@ const crypto = require('crypto');
 class KredikaService {
   constructor() {
     this.baseUrl = process.env.KREDIKA_API_URL || 'http://localhost:7575/api/v1';
-    this.partnerId = process.env.KREDIKA_PARTNER_ID || 'default-partner';
+    this.partnerId = null; // Will be set by authenticate() from API response
     
     // OAuth2 credentials (optional)
     this.clientId = process.env.KREDIKA_CLIENT_ID;
@@ -33,7 +33,7 @@ class KredikaService {
     // Debug logging
     console.log(`\n🔑 Kredika Service initialized with:`);
     console.log(`   API URL: ${this.baseUrl}`);
-    console.log(`   Partner ID: ${this.partnerId}`);
+    console.log(`   Partner ID: ${this.partnerId || '⏳ will be retrieved from auth'}`);
     console.log(`   OAuth2 Client ID: ${this.clientId ? '✓ configured' : '✗ MISSING - REQUIRED'}`);
     console.log(`   OAuth2 Client Secret: ${this.clientSecret ? '✓ configured' : '✗ MISSING - REQUIRED'}`);
     console.log(`   Webhook Secret: ${this.webhookSecret ? '✓ configured' : '✗ missing'}\n`);
@@ -75,10 +75,12 @@ class KredikaService {
         this.accessToken = response.data.accessToken;
         this.refreshToken = response.data.refreshToken;
         this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
+        this.partnerId = response.data.partnerId; // 🔥 Capture partnerId from auth response
 
         console.log('✅ Kredika OAuth2 authentication successful');
         console.log(`   Token expires in: ${response.data.expiresIn}s`);
         console.log(`   Scope: ${response.data.scope}`);
+        console.log(`   Partner ID: ${this.partnerId}`);
         this.authMode = 'OAUTH2';
         return response.data;
       }
@@ -88,12 +90,14 @@ class KredikaService {
         console.log('✅ Using API Key authentication (development mode)');
         this.accessToken = 'api-key-auth';
         this.tokenExpiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24h
+        this.partnerId = partnerKey; // 🔥 Use partnerKey as partnerId for API Key mode
         this.authMode = 'API_KEY';
         return {
           accessToken: this.accessToken,
           tokenType: 'Bearer',
           expiresIn: 86400,
-          mode: 'API_KEY'
+          mode: 'API_KEY',
+          partnerId: this.partnerId
         };
       }
 
@@ -125,6 +129,7 @@ class KredikaService {
       this.accessToken = response.data.accessToken;
       this.refreshToken = response.data.refreshToken;
       this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
+      this.partnerId = response.data.partnerId; // 🔥 Update partnerId on token refresh
 
       console.log('✅ Kredika token refreshed successfully');
       return response.data;
@@ -200,10 +205,9 @@ class KredikaService {
     try {
       await this.ensureValidToken();
 
-      // NOTE: partnerId is NOT sent - Kredika deduces it from the authentication
-      // The authenticated partner (via KREDIKA_CLIENT_ID/KREDIKA_CLIENT_SECRET) 
-      // can only create reservations for themselves
+      // NOTE: partnerId IS required - captured from authentication response
       const payload = {
+        partnerId: this.partnerId, // 🔥 Required by Kredika API
         externalOrderRef: reservationData.externalOrderRef,
         externalCustomerRef: reservationData.externalCustomerRef,
         purchaseAmount: parseFloat(reservationData.purchaseAmount),
