@@ -225,7 +225,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/credits/reservations/${reservationId}`,
+        `/credits/reservations/${reservationId}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -244,7 +244,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/credits/reservations/external/${externalOrderRef}`,
+        `/credits/reservations/external/${externalOrderRef}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -262,7 +262,7 @@ class KredikaService {
     try {
       await this.ensureValidToken();
 
-      const url = status ? `/v1/credits/reservations?status=${status}` : '/v1/credits/reservations';
+      const url = status ? `/credits/reservations?status=${status}` : '/credits/reservations';
 
       const response = await this.axiosInstance.get(
         url,
@@ -284,7 +284,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.patch(
-        `/v1/credits/reservations/${reservationId}/status?status=${status}`,
+        `/credits/reservations/${reservationId}/status?status=${status}`,
         {},
         { headers: this.getAuthHeaders() }
       );
@@ -312,7 +312,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.post(
-        `/v1/credits/reservations/${reservationId}/cancel`,
+        `/credits/reservations/${reservationId}/cancel`,
         {},
         { headers: this.getAuthHeaders() }
       );
@@ -333,7 +333,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        '/v1/credits/reservations/stats',
+        '/credits/reservations/stats',
         { headers: this.getAuthHeaders() }
       );
 
@@ -356,7 +356,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/installments/${installmentId}`,
+        `/installments/${installmentId}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -375,7 +375,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/installments/reservation/${creditReservationId}`,
+        `/installments/reservation/${creditReservationId}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -394,7 +394,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.post(
-        `/v1/installments/${installmentId}/payments`,
+        `/installments/${installmentId}/payments`,
         {},
         {
           headers: this.getAuthHeaders(),
@@ -421,7 +421,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/installments/upcoming?daysAhead=${daysAhead}`,
+        `/installments/upcoming?daysAhead=${daysAhead}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -440,7 +440,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.post(
-        `/v1/installments/${installmentId}/reminders`,
+        `/installments/${installmentId}/reminders`,
         {},
         { headers: this.getAuthHeaders() }
       );
@@ -478,7 +478,7 @@ class KredikaService {
       };
 
       const response = await this.axiosInstance.post(
-        '/v1/payment-instructions',
+        '/payment-instructions',
         payload,
         { headers: this.getAuthHeaders() }
       );
@@ -499,7 +499,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/payment-instructions/${instructionId}`,
+        `/payment-instructions/${instructionId}`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -518,7 +518,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.get(
-        `/v1/payment-instructions/installment/${installmentId}/active`,
+        `/payment-instructions/installment/${installmentId}/active`,
         { headers: this.getAuthHeaders() }
       );
 
@@ -537,7 +537,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.patch(
-        `/v1/payment-instructions/${instructionId}/view`,
+        `/payment-instructions/${instructionId}/view`,
         {},
         { headers: this.getAuthHeaders() }
       );
@@ -557,7 +557,7 @@ class KredikaService {
       await this.ensureValidToken();
 
       const response = await this.axiosInstance.post(
-        `/v1/payment-instructions/${instructionId}/regenerate?validityHours=${validityHours}`,
+        `/payment-instructions/${instructionId}/regenerate?validityHours=${validityHours}`,
         {},
         { headers: this.getAuthHeaders() }
       );
@@ -637,3 +637,5 @@ class KredikaService {
 }
 
 module.exports = new KredikaService();
+
+
