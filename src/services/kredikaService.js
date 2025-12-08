@@ -234,10 +234,14 @@ class KredikaService {
       console.log('\n📤 Sending Kredika reservation payload:');
       console.log(JSON.stringify(payload, null, 2));
 
+      const headers = this.getReservationHeaders();
+      console.log('📋 Headers sent to Kredika:');
+      console.log(JSON.stringify(headers, null, 2));
+
       const response = await this.axiosInstance.post(
         '/credits/reservations',
         payload,
-        { headers: this.getReservationHeaders() }
+        { headers }
       );
 
       console.log(`✅ Credit reservation created: ${response.data.creditReservationId}`);
