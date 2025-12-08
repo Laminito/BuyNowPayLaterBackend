@@ -204,7 +204,7 @@ class KredikaService {
       };
 
       const response = await this.axiosInstance.post(
-        '/v1/credits/reservations',
+        '/credits/reservations',
         payload,
         { headers: this.getAuthHeaders() }
       );

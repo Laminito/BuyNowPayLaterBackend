@@ -1,16 +1,13 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const AdminSettings = require('../models/AdminSettings');
+const User = require('../models/User');
 const kredikaService = require('../services/kredikaService');
-const { validationResult } = require('express-validator');
 
 const createOrder = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
+    // Validation est déjà faite par le middleware handleValidationErrors
+    
     const { items, shippingAddress, paymentMethod, installments = 1 } = req.body;
     const userId = req.user.id;
 
