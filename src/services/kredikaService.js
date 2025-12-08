@@ -11,22 +11,25 @@ class KredikaService {
     this.apiKey = process.env.KREDIKA_API_KEY;
     this.partnerKey = process.env.KREDIKA_PARTNER_KEY;
     this.webhookSecret = process.env.KREDIKA_WEBHOOK_SECRET;
+    
+    // OAuth2 credentials (if available)
+    this.clientId = process.env.KREDIKA_CLIENT_ID;
+    this.clientSecret = process.env.KREDIKA_CLIENT_SECRET;
+    
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiresAt = null;
+    
     this.axiosInstance = axios.create({
       baseURL: this.baseUrl,
-      timeout: 10000,
-      headers: {
-        'X-API-Key': this.apiKey,
-        'X-Partner-Key': this.partnerKey
-      }
+      timeout: 10000
     });
 
     console.log(`🔑 Kredika Service initialized with:`);
     console.log(`   API URL: ${this.baseUrl}`);
     console.log(`   API Key: ${this.apiKey ? '✓ configured' : '✗ missing'}`);
     console.log(`   Partner Key: ${this.partnerKey ? '✓ configured' : '✗ missing'}`);
+    console.log(`   OAuth2 (optional): ${this.clientId ? '✓ configured' : '✗ not configured'}`);
   }
 
   /**
@@ -34,7 +37,93 @@ class KredikaService {
    */
 
   /**
+   * Authentifier le partenaire (Furniture Market) auprès de Kredika
+   * POST /v1/auth/token
+   * 
+   * Utilisé pour obtenir un access token (24h) et refresh token (30j)
+   * afin de faire des appels API sécurisés à Kredika
+   */
+  async authenticate() {
+    try {
+      // Si les clés API sont disponibles, les utiliser directement (mode développement)
+      if (this.apiKey && this.partnerKey) {
+        console.log('✅ Using API Key authentication (development mode)');
+        this.accessToken = 'api-key-auth';
+        this.tokenExpiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24h
+        return {
+          accessToken: this.accessToken,
+          tokenType: 'Bearer',
+          expiresIn: 86400
+        };
+      }
+
+      // Sinon, utiliser OAuth2 (production)
+      if (!this.clientId || !this.clientSecret) {
+        throw new Error('Kredika credentials not configured (need KREDIKA_API_KEY or KREDIKA_CLIENT_ID/SECRET)');
+      }
+
+      console.log('🔐 Authenticating with Kredika OAuth2...');
+      const response = await this.axiosInstance.post('/auth/token', {
+        clientId: this.clientId,
+        clientSecret: this.clientSecret
+      });
+
+      this.accessToken = response.data.accessToken;
+      this.refreshToken = response.data.refreshToken;
+      this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
+
+      console.log('✅ Kredika OAuth2 authentication successful');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Kredika authentication failed:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Rafraîchir l'access token
+   * POST /v1/auth/refresh
+   */
+  async refreshAccessToken() {
+    try {
+      if (!this.refreshToken) {
+        await this.authenticate();
+        return;
+      }
+
+      console.log('🔄 Refreshing Kredika token...');
+      const response = await this.axiosInstance.post('/auth/refresh', {
+        refreshToken: this.refreshToken
+      });
+
+      this.accessToken = response.data.accessToken;
+      this.refreshToken = response.data.refreshToken;
+      this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
+
+      console.log('✅ Kredika token refreshed successfully');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Kredika token refresh failed:', error.response?.data || error.message);
+      // Réauthentifier si le refresh échoue
+      await this.authenticate();
+    }
+  }
+
+  /**
+   * Assurer que le token est valide
+   * Rafraîchit si besoin
+   */
+  async ensureValidToken() {
+    if (!this.accessToken) {
+      await this.authenticate();
+    } else if (Date.now() >= this.tokenExpiresAt - 60000) { // Si < 1min restant
+      await this.refreshAccessToken();
+    }
+  }
+
+  /**
    * Vérifier la disponibilité de l'API Kredika
+   * GET /health
    */
   async healthCheck() {
     try {
@@ -48,24 +137,28 @@ class KredikaService {
   }
 
   /**
-   * Assurer que les clés API sont configurées
-   */
-  async ensureValidToken() {
-    if (!this.apiKey || !this.partnerKey) {
-      throw new Error('Kredika API keys not configured');
-    }
-    // Avec les clés API, pas besoin de token OAuth2
-    return true;
-  }
-
-  /**
-   * Obtenir les headers d'autorisation
+   * Obtenir les headers d'autorisation pour les requêtes API
+   * 
+   * Priorité:
+   * 1. Bearer token (OAuth2)
+   * 2. API Key headers (développement)
    */
   getAuthHeaders() {
-    return {
-      'Authorization': `Bearer ${this.accessToken}`,
+    const headers = {
       'Content-Type': 'application/json'
     };
+
+    // Utiliser le Bearer token si disponible (OAuth2)
+    if (this.accessToken && this.accessToken !== 'api-key-auth') {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+    // Sinon utiliser les clés API (développement)
+    else if (this.apiKey && this.partnerKey) {
+      headers['X-API-Key'] = this.apiKey;
+      headers['X-Partner-Key'] = this.partnerKey;
+    }
+
+    return headers;
   }
 
   /**
