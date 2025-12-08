@@ -195,17 +195,22 @@ class KredikaService {
 
   /**
    * Obtenir les headers pour les endpoints de réservation
-   * Pour les réservations, utiliser SEULEMENT le Bearer token (pas les headers API Key)
+   * Pour les réservations, utiliser les API Key headers plutôt que Bearer token
+   * (Le mock Kredika a un bug avec les Partner objects du Bearer token)
    */
   getReservationHeaders() {
-    // Pour les réservations, retourner seulement les headers OAuth2
-    // Les headers API Key causent des conflits avec la validation du backend Kredika
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': this.authMode === 'OAUTH2' && this.accessToken 
-        ? `Bearer ${this.accessToken}` 
-        : undefined
+    const headers = {
+      'Content-Type': 'application/json'
     };
+
+    // Mode API Key: Headers d'authentification
+    const apiKey = process.env.KREDIKA_API_KEY;
+    const partnerKey = process.env.KREDIKA_PARTNER_KEY;
+    
+    if (apiKey) headers['X-API-Key'] = apiKey;
+    if (partnerKey) headers['X-Partner-Key'] = partnerKey;
+    
+    return headers;
   }
 
   /**
@@ -234,14 +239,10 @@ class KredikaService {
       console.log('\n📤 Sending Kredika reservation payload:');
       console.log(JSON.stringify(payload, null, 2));
 
-      const headers = this.getReservationHeaders();
-      console.log('📋 Headers sent to Kredika:');
-      console.log(JSON.stringify(headers, null, 2));
-
       const response = await this.axiosInstance.post(
         '/credits/reservations',
         payload,
-        { headers }
+        { headers: this.getReservationHeaders() }
       );
 
       console.log(`✅ Credit reservation created: ${response.data.creditReservationId}`);
