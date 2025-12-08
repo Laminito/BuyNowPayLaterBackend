@@ -8,15 +8,17 @@ const PORT = process.env.PORT || 5000;
 // Connexion à la base de données
 connectDB();
 
-// Initialiser l'authentification Kredika au démarrage
+// Initialiser l'authentification Kredika au démarrage (optionnel, non bloquant)
 const initializeKredika = async () => {
   try {
     console.log('\n🔐 Initializing Kredika authentication...');
-    await kredikaService.authenticate();
-    console.log('✅ Kredika service ready\n');
+    const authResult = await kredikaService.authenticate();
+    console.log('✅ Kredika service authenticated and ready\n');
+    return authResult;
   } catch (error) {
-    console.error('⚠️  Kredika initialization failed:', error.message);
-    console.log('ℹ️  Continuing with development mode (API key fallback)\n');
+    console.warn('⚠️  Kredika initial authentication attempt failed:', error.message);
+    console.log('ℹ️  Will use lazy authentication on first API call (API key fallback mode)\n');
+    // Ne pas lever l'erreur, on va utiliser la fallback
   }
 };
 
@@ -34,7 +36,7 @@ const server = app.listen(PORT, async () => {
   console.log(`📚 API Documentation: http://localhost:${PORT}/api/docs`);
   console.log(`🏪 Furniture Store API v1.0.0`);
   
-  // Initialiser Kredika après le démarrage du serveur
+  // Initialiser Kredika après le démarrage du serveur (non bloquant)
   await initializeKredika();
 });
 

@@ -26,12 +26,14 @@ class KredikaService {
       timeout: 10000
     });
 
-    console.log(`🔑 Kredika Service initialized with:`);
+    // Debug logging
+    console.log(`\n🔑 Kredika Service initialized with:`);
     console.log(`   API URL: ${this.baseUrl}`);
     console.log(`   Partner ID: ${this.partnerId}`);
-    console.log(`   API Key: ${this.apiKey ? '✓ configured' : '✗ missing'}`);
-    console.log(`   Partner Key: ${this.partnerKey ? '✓ configured' : '✗ missing'}`);
+    console.log(`   API Key: ${this.apiKey ? '✓ configured (' + this.apiKey.substring(0, 10) + '...)' : '✗ missing'}`);
+    console.log(`   Partner Key: ${this.partnerKey ? '✓ configured (' + this.partnerKey.substring(0, 10) + '...)' : '✗ missing'}`);
     console.log(`   OAuth2 (optional): ${this.clientId ? '✓ configured' : '✗ not configured'}`);
+    console.log(`   Webhook Secret: ${this.webhookSecret ? '✓ configured' : '✗ missing'}\n`);
   }
 
   /**
@@ -47,37 +49,52 @@ class KredikaService {
    */
   async authenticate() {
     try {
-      // Si les clés API sont disponibles, les utiliser directement (mode développement)
-      if (this.apiKey && this.partnerKey) {
+      // Toujours recharger les variables d'environnement (au cas où elles auraient changé)
+      const apiKey = process.env.KREDIKA_API_KEY;
+      const partnerKey = process.env.KREDIKA_PARTNER_KEY;
+      const clientId = process.env.KREDIKA_CLIENT_ID;
+      const clientSecret = process.env.KREDIKA_CLIENT_SECRET;
+
+      console.log('\n🔐 Checking Kredika credentials...');
+      console.log(`   KREDIKA_API_KEY: ${apiKey ? '✓' : '✗'}`);
+      console.log(`   KREDIKA_PARTNER_KEY: ${partnerKey ? '✓' : '✗'}`);
+      console.log(`   KREDIKA_CLIENT_ID: ${clientId ? '✓' : '✗'}`);
+      console.log(`   KREDIKA_CLIENT_SECRET: ${clientSecret ? '✓' : '✗'}`);
+
+      // Mode 1: API Key (développement)
+      if (apiKey && partnerKey) {
         console.log('✅ Using API Key authentication (development mode)');
         this.accessToken = 'api-key-auth';
         this.tokenExpiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24h
         return {
           accessToken: this.accessToken,
           tokenType: 'Bearer',
-          expiresIn: 86400
+          expiresIn: 86400,
+          mode: 'API_KEY'
         };
       }
 
-      // Sinon, utiliser OAuth2 (production)
-      if (!this.clientId || !this.clientSecret) {
-        throw new Error('Kredika credentials not configured (need KREDIKA_API_KEY or KREDIKA_CLIENT_ID/SECRET)');
+      // Mode 2: OAuth2 (production)
+      if (clientId && clientSecret) {
+        console.log('🔐 Authenticating with Kredika OAuth2...');
+        const response = await this.axiosInstance.post('/auth/token', {
+          clientId: clientId,
+          clientSecret: clientSecret
+        });
+
+        this.accessToken = response.data.accessToken;
+        this.refreshToken = response.data.refreshToken;
+        this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
+
+        console.log('✅ Kredika OAuth2 authentication successful');
+        return response.data;
       }
 
-      console.log('🔐 Authenticating with Kredika OAuth2...');
-      const response = await this.axiosInstance.post('/auth/token', {
-        clientId: this.clientId,
-        clientSecret: this.clientSecret
-      });
-
-      this.accessToken = response.data.accessToken;
-      this.refreshToken = response.data.refreshToken;
-      this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
-
-      console.log('✅ Kredika OAuth2 authentication successful');
-      return response.data;
+      // Mode 3: Erreur - pas de credentials du tout
+      throw new Error('Kredika credentials not configured: need either (KREDIKA_API_KEY + KREDIKA_PARTNER_KEY) or (KREDIKA_CLIENT_ID + KREDIKA_CLIENT_SECRET)');
+      
     } catch (error) {
-      console.error('❌ Kredika authentication failed:', error.response?.data || error.message);
+      console.error('❌ Kredika authentication failed:', error.message);
       throw error;
     }
   }
