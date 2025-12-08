@@ -64,8 +64,8 @@ class KredikaService {
       console.log(`   KREDIKA_CLIENT_ID: ${clientId ? '✓ ' + clientId.substring(0, 10) + '...' : '✗ MISSING'}`);
       console.log(`   KREDIKA_CLIENT_SECRET: ${clientSecret ? '✓ ' + clientSecret.substring(0, 10) + '...' : '✗ MISSING'}`);
 
-      // Priority 1: Try OAuth2 if real credentials are available
-      if (clientId && clientSecret && !clientId.startsWith('pk_') && !clientSecret.startsWith('kred_')) {
+      // Priority 1: Try OAuth2 if credentials are available (pk_* and kred_* ARE valid OAuth2 creds)
+      if (clientId && clientSecret) {
         console.log('🔐 Authenticating with Kredika OAuth2...');
         const response = await this.axiosInstance.post('/auth/token', {
           clientId: clientId,
