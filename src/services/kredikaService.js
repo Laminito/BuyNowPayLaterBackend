@@ -194,6 +194,27 @@ class KredikaService {
   }
 
   /**
+   * Obtenir les headers pour les endpoints de réservation (avec partenaire API Key en fallback)
+   * Certains endpoints peuvent nécessiter les headers API Key en complément du Bearer token
+   */
+  getReservationHeaders() {
+    const headers = this.getAuthHeaders();
+    
+    // Pour les réservations, ajouter aussi les headers API Key si disponibles
+    // Cela permet à Kredika de valider la cohérence du partenaire
+    const apiKey = process.env.KREDIKA_API_KEY;
+    const partnerKey = process.env.KREDIKA_PARTNER_KEY;
+    
+    // Si on a les API Keys ET un Bearer token, envoyer les deux
+    if (this.authMode === 'OAUTH2' && apiKey && partnerKey) {
+      headers['X-API-Key'] = apiKey;
+      headers['X-Partner-Key'] = partnerKey;
+    }
+    
+    return headers;
+  }
+
+  /**
    * === GESTION DES RÉSERVATIONS DE CRÉDIT ===
    */
 
@@ -220,7 +241,7 @@ class KredikaService {
       const response = await this.axiosInstance.post(
         '/credits/reservations',
         payload,
-        { headers: this.getAuthHeaders() }
+        { headers: this.getReservationHeaders() }
       );
 
       console.log(`✅ Credit reservation created: ${response.data.creditReservationId}`);
