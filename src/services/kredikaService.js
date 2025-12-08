@@ -194,24 +194,18 @@ class KredikaService {
   }
 
   /**
-   * Obtenir les headers pour les endpoints de réservation (avec partenaire API Key en fallback)
-   * Certains endpoints peuvent nécessiter les headers API Key en complément du Bearer token
+   * Obtenir les headers pour les endpoints de réservation
+   * Pour les réservations, utiliser SEULEMENT le Bearer token (pas les headers API Key)
    */
   getReservationHeaders() {
-    const headers = this.getAuthHeaders();
-    
-    // Pour les réservations, ajouter aussi les headers API Key si disponibles
-    // Cela permet à Kredika de valider la cohérence du partenaire
-    const apiKey = process.env.KREDIKA_API_KEY;
-    const partnerKey = process.env.KREDIKA_PARTNER_KEY;
-    
-    // Si on a les API Keys ET un Bearer token, envoyer les deux
-    if (this.authMode === 'OAUTH2' && apiKey && partnerKey) {
-      headers['X-API-Key'] = apiKey;
-      headers['X-Partner-Key'] = partnerKey;
-    }
-    
-    return headers;
+    // Pour les réservations, retourner seulement les headers OAuth2
+    // Les headers API Key causent des conflits avec la validation du backend Kredika
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': this.authMode === 'OAUTH2' && this.accessToken 
+        ? `Bearer ${this.accessToken}` 
+        : undefined
+    };
   }
 
   /**
