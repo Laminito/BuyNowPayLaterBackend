@@ -8,6 +8,7 @@ const crypto = require('crypto');
 class KredikaService {
   constructor() {
     this.baseUrl = process.env.KREDIKA_API_URL || 'http://localhost:7575/api/v1';
+    this.partnerId = process.env.KREDIKA_PARTNER_ID || 'default-partner';
     this.apiKey = process.env.KREDIKA_API_KEY;
     this.partnerKey = process.env.KREDIKA_PARTNER_KEY;
     this.webhookSecret = process.env.KREDIKA_WEBHOOK_SECRET;
@@ -27,6 +28,7 @@ class KredikaService {
 
     console.log(`🔑 Kredika Service initialized with:`);
     console.log(`   API URL: ${this.baseUrl}`);
+    console.log(`   Partner ID: ${this.partnerId}`);
     console.log(`   API Key: ${this.apiKey ? '✓ configured' : '✗ missing'}`);
     console.log(`   Partner Key: ${this.partnerKey ? '✓ configured' : '✗ missing'}`);
     console.log(`   OAuth2 (optional): ${this.clientId ? '✓ configured' : '✗ not configured'}`);
@@ -175,13 +177,13 @@ class KredikaService {
       await this.ensureValidToken();
 
       const payload = {
-        partnerId: this.clientId,
+        partnerId: this.partnerId,
         externalOrderRef: reservationData.externalOrderRef,
         externalCustomerRef: reservationData.externalCustomerRef,
         purchaseAmount: parseFloat(reservationData.purchaseAmount),
         installmentCount: parseInt(reservationData.installmentCount) || 6,
         notes: reservationData.notes || '',
-        totalActiveCredits: 0
+        totalActiveCredits: parseFloat(reservationData.totalActiveCredits) || 0
       };
 
       const response = await this.axiosInstance.post(

@@ -1,8 +1,32 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const AdminSettings = require('../models/AdminSettings');
+const User = require('../models/User');
 const kredikaService = require('../services/kredikaService');
 const { validationResult } = require('express-validator');
+
+/**
+ * Calculer le montant total des crédits actifs du client
+ * (somme des montants restants de toutes les commandes en attente de paiement)
+ */
+const calculateUserActiveCredits = async (userId) => {
+  try {
+    const activeOrders = await Order.find({
+      user: userId,
+      'payment.status': { $in: ['pending', 'processing'] },
+      'payment.method': 'kredika'
+    });
+
+    const totalActive = activeOrders.reduce((sum, order) => {
+      return sum + (order.pricing?.total || 0);
+    }, 0);
+
+    return Math.round(totalActive * 100); // Convertir en centimes
+  } catch (error) {
+    console.error('Error calculating active credits:', error);
+    return 0;
+  }
+};
 
 const createOrder = async (req, res) => {
   try {
@@ -95,11 +119,15 @@ const createOrder = async (req, res) => {
         }
 
         // Créer la réservation Kredika
+        const totalActiveCredits = await calculateUserActiveCredits(userId);
+        
         const kredikaReservation = await kredikaService.createReservation({
           externalOrderRef,
           externalCustomerRef,
           purchaseAmount: Math.round(total * 100), // Montant en centimes
           installmentCount: installments,
+          notes: `Furniture order ${order.orderNumber} - ${validatedItems.map(i => i.name).join(', ')}`,
+          totalActiveCredits,
           customerEmail: req.user.email,
           customerFirstName: firstName,
           customerLastName: lastName
