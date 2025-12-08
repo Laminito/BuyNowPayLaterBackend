@@ -7,16 +7,26 @@ const crypto = require('crypto');
  */
 class KredikaService {
   constructor() {
-    this.baseUrl = process.env.KREDIKA_API_URL || 'https://api.kredika.sn/api';
-    this.clientId = process.env.KREDIKA_CLIENT_ID;
-    this.clientSecret = process.env.KREDIKA_CLIENT_SECRET;
+    this.baseUrl = process.env.KREDIKA_API_URL || 'http://localhost:7575/api/v1';
+    this.apiKey = process.env.KREDIKA_API_KEY;
+    this.partnerKey = process.env.KREDIKA_PARTNER_KEY;
+    this.webhookSecret = process.env.KREDIKA_WEBHOOK_SECRET;
     this.accessToken = null;
     this.refreshToken = null;
     this.tokenExpiresAt = null;
     this.axiosInstance = axios.create({
       baseURL: this.baseUrl,
-      timeout: 10000
+      timeout: 10000,
+      headers: {
+        'X-API-Key': this.apiKey,
+        'X-Partner-Key': this.partnerKey
+      }
     });
+
+    console.log(`🔑 Kredika Service initialized with:`);
+    console.log(`   API URL: ${this.baseUrl}`);
+    console.log(`   API Key: ${this.apiKey ? '✓ configured' : '✗ missing'}`);
+    console.log(`   Partner Key: ${this.partnerKey ? '✓ configured' : '✗ missing'}`);
   }
 
   /**
@@ -24,57 +34,28 @@ class KredikaService {
    */
 
   /**
-   * Obtenir un access token
+   * Vérifier la disponibilité de l'API Kredika
    */
-  async authenticate() {
+  async healthCheck() {
     try {
-      const response = await this.axiosInstance.post('/v1/auth/token', {
-        clientId: this.clientId,
-        clientSecret: this.clientSecret
-      });
-
-      this.accessToken = response.data.accessToken;
-      this.refreshToken = response.data.refreshToken;
-      this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
-
-      console.log('✅ Kredika authentication successful');
+      const response = await this.axiosInstance.get('/health');
+      console.log('✅ Kredika API is healthy');
       return response.data;
     } catch (error) {
-      console.error('❌ Kredika authentication failed:', error.response?.data || error.message);
+      console.error('❌ Kredika health check failed:', error.message);
       throw error;
     }
   }
 
   /**
-   * Rafraîchir l'access token
-   */
-  async refreshAccessToken() {
-    try {
-      const response = await this.axiosInstance.post('/v1/auth/refresh', {
-        refreshToken: this.refreshToken
-      });
-
-      this.accessToken = response.data.accessToken;
-      this.refreshToken = response.data.refreshToken;
-      this.tokenExpiresAt = Date.now() + (response.data.expiresIn * 1000);
-
-      console.log('✅ Token refreshed successfully');
-      return response.data;
-    } catch (error) {
-      console.error('❌ Token refresh failed:', error.response?.data || error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Assurer que le token est valide
+   * Assurer que les clés API sont configurées
    */
   async ensureValidToken() {
-    if (!this.accessToken) {
-      await this.authenticate();
-    } else if (Date.now() >= this.tokenExpiresAt - 60000) { // Rafraîchir si < 1min restant
-      await this.refreshAccessToken();
+    if (!this.apiKey || !this.partnerKey) {
+      throw new Error('Kredika API keys not configured');
     }
+    // Avec les clés API, pas besoin de token OAuth2
+    return true;
   }
 
   /**
