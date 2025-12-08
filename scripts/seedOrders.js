@@ -97,14 +97,21 @@ const seedOrders = async () => {
     await connectDB();
 
     console.log('🧹 Cleaning existing orders and test users...');
-    // Nettoyer les commandes et utilisateurs de test existants
-    await Order.deleteMany({});
-    // Ne supprimer que les utilisateurs de test (pas l'admin)
-    await User.deleteMany({ email: { $in: testUsers.map(u => u.email) } });
+    // Upsert des utilisateurs clients (créer ou mettre à jour)
+    await Order.deleteMany({}); // Nettoyer seulement les commandes, pas les utilisateurs
+    // Ne pas supprimer les utilisateurs - utiliser upsert
 
-    console.log('👥 Creating customer users...');
-    // Créer les utilisateurs clients
-    const createdUsers = await User.insertMany(testUsers);
+    console.log('👥 Creating/updating customer users...');
+    // Créer ou mettre à jour les utilisateurs clients
+    const createdUsers = await Promise.all(
+      testUsers.map(user =>
+        User.findOneAndUpdate(
+          { email: user.email },
+          user,
+          { upsert: true, new: true }
+        )
+      )
+    );
 
     // Restaurer les hashs directement pour éviter un double hachage par le hook pre-save
     const hashedPassword = '$2a$12$Ui0GJf504HHmEiiw05l1d.zWPf5CTLMrS0rXbNsmMG7a9dksM.XO6';

@@ -50,6 +50,45 @@ const options = {
             availableCredit: { type: 'number', example: 1000 }
           }
         },
+        Category: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string', example: '67a3f8c9b4d5e6f7g8h9i0j1' },
+            name: { type: 'string', example: 'Chambres' },
+            slug: { type: 'string', example: 'chambres' },
+            description: { type: 'string', example: 'Lits, armoires, commodes pour votre chambre' },
+            sortOrder: { type: 'integer', example: 1 },
+            isActive: { type: 'boolean', example: true },
+            parent: { type: 'string', nullable: true, example: null },
+            image: { type: 'object', example: { url: 'https://...', publicId: 'cat-1' } },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        ProductType: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string', example: '67a3f8c9b4d5e6f7g8h9i0j1' },
+            name: { type: 'string', example: 'Lit' },
+            code: { type: 'string', example: 'LIT' },
+            description: { type: 'string', example: 'Lits et sommiers' },
+            attributes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'Taille' },
+                  fieldType: { type: 'string', example: 'select' },
+                  required: { type: 'boolean', example: true },
+                  options: { type: 'array', items: { type: 'string' }, example: ['Simple', 'Double'] }
+                }
+              }
+            },
+            isActive: { type: 'boolean', example: true },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
         Product: {
           type: 'object',
           properties: {
@@ -107,7 +146,7 @@ const options = {
       }
     ]
   },
-  apis: ['./src/routes/*.js', './src/swagger-routes.js']
+  apis: ['./src/routes/*.js', './src/swagger-routes.js', './src/swagger-categories-products.js']
 };
 
 const swaggerSpec = swaggerJsdoc(options);

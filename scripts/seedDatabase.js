@@ -6,6 +6,7 @@ const User = require('../src/models/User');
 const Category = require('../src/models/Category');
 const Product = require('../src/models/Product');
 const AdminSettings = require('../src/models/AdminSettings');
+const ProductType = require('../src/models/ProductType');
 
 const connectDB = require('../src/config/database');
 
@@ -13,32 +14,86 @@ const seedData = async () => {
   try {
     await connectDB();
 
-    console.log('🧹 Cleaning existing data...');
-    // Nettoyer les collections existantes
-    await User.deleteMany({});
-    await Category.deleteMany({});
-    await Product.deleteMany({});
-    await AdminSettings.deleteMany({});
+    console.log('🧹 Preparing database (upsert mode - no data deletion)...');
+    // Ne pas supprimer les données - utiliser upsert à la place
+    // Cela préserve les données créées par d'autres seeders ou l'utilisateur
 
-    console.log('👤 Creating admin user...');
-    // Créer un utilisateur admin avec mot de passe hashé
-    const adminUser = new User({
-      name: 'Admin Furniture Store',
-      email: 'admin@furniture-store.com',
-      password: '$2a$12$Ui0GJf504HHmEiiw05l1d.zWPf5CTLMrS0rXbNsmMG7a9dksM.XO6',
-      role: 'admin'
-    });
-    // Le hook pre-save essaiera de hasher à nouveau, donc on bypasse avec updateOne
-    await adminUser.save();
-    // Restaurer le hash directement pour éviter un double hachage
-    await User.updateOne(
-      { _id: adminUser._id },
-      { password: '$2a$12$Ui0GJf504HHmEiiw05l1d.zWPf5CTLMrS0rXbNsmMG7a9dksM.XO6' }
+    console.log('👤 Creating/updating admin user...');
+    // Créer ou mettre à jour l'utilisateur admin
+    const adminUser = await User.findOneAndUpdate(
+      { email: 'admin@furniture-store.com' },
+      {
+        name: 'Admin Furniture Store',
+        email: 'admin@furniture-store.com',
+        password: 'admin123', // Sera hashé par le hook pre-save
+        role: 'admin'
+      },
+      { upsert: true, new: true }
     );
 
-    console.log('🏷️ Creating categories...');
-    // Créer des catégories
-    const categories = await Category.insertMany([
+    console.log('📦 Creating/updating product types...');
+    // Créer ou mettre à jour les types de produits
+    const productTypesData = [
+      {
+        name: 'Lit',
+        code: 'LIT',
+        description: 'Lits et sommiers',
+        attributes: [
+          { name: 'Taille', fieldType: 'select', required: true, options: ['Simple', 'Double', 'Queen', 'King'] },
+          { name: 'Matériau', fieldType: 'select', required: true, options: ['Bois', 'Métal', 'Tissu'] }
+        ]
+      },
+      {
+        name: 'Canapé',
+        code: 'CANAPE',
+        description: 'Canapés et fauteuils',
+        attributes: [
+          { name: 'Configuration', fieldType: 'select', required: true, options: ['2 places', '3 places', 'Angle', 'En L'] },
+          { name: 'Revêtement', fieldType: 'select', required: true, options: ['Tissu', 'Cuir', 'Velours'] }
+        ]
+      },
+      {
+        name: 'Table',
+        code: 'TABLE',
+        description: 'Tables et bureaux',
+        attributes: [
+          { name: 'Forme', fieldType: 'select', required: true, options: ['Ronde', 'Carrée', 'Rectangulaire'] },
+          { name: 'Matériau plateau', fieldType: 'select', required: true, options: ['Bois', 'Verre', 'Marbre'] }
+        ]
+      },
+      {
+        name: 'Armoire',
+        code: 'ARMOIRE',
+        description: 'Armoires et rangements',
+        attributes: [
+          { name: 'Nombre de portes', fieldType: 'select', required: true, options: ['2 portes', '3 portes', '4 portes', '6 portes'] },
+          { name: 'Matériau', fieldType: 'select', required: true, options: ['Bois', 'MDF', 'Mélaminé'] }
+        ]
+      },
+      {
+        name: 'Accessoire',
+        code: 'ACC',
+        description: 'Accessoires et décoration',
+        attributes: [
+          { name: 'Type', fieldType: 'text', required: true },
+          { name: 'Matériau', fieldType: 'select', required: true, options: ['Bois', 'Métal', 'Textile', 'Verre'] }
+        ]
+      }
+    ];
+
+    const productTypes = await Promise.all(
+      productTypesData.map(pt =>
+        ProductType.findOneAndUpdate(
+          { code: pt.code },
+          pt,
+          { upsert: true, new: true }
+        )
+      )
+    );
+
+    console.log('🏷️ Creating/updating categories...');
+    // Créer ou mettre à jour les catégories
+    const categoriesData = [
       { 
         name: 'Chambres', 
         slug: 'chambres', 
@@ -63,7 +118,17 @@ const seedData = async () => {
         description: 'Bureaux, chaises de bureau, rangements',
         sortOrder: 4
       }
-    ]);
+    ];
+
+    const categories = await Promise.all(
+      categoriesData.map(cat =>
+        Category.findOneAndUpdate(
+          { slug: cat.slug },
+          cat,
+          { upsert: true, new: true }
+        )
+      )
+    );
 
     // Créer un mapping des catégories
     const categoryMap = {
@@ -133,18 +198,33 @@ const seedData = async () => {
       { name: 'Porte Manteau Mural', description: 'Porte manteau design mural', price: 55000, originalPrice: 75000, discount: 27, category: categoryMap['chambres'], images: [{ url: 'https://plus.unsplash.com/premium_photo-1670968418657-805607e97742?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', publicId: 'portemanteau-1', alt: 'Porte manteau' }], dimensions: { length: 80, width: 10, height: 30, weight: 3 }, materials: ['Bois', 'Métal'], colors: ['Noir', 'Chêne'], sku: 'PORTEMANTEAU-001', featured: false, inStock: true, stockQuantity: 28, brand: 'WallHooks', tags: ['rangement', 'déco'], rating: { average: 4.2, count: 5 } }
     ];
 
-    await Product.insertMany(products);
+    // Upsert tous les produits (créer ou mettre à jour par SKU)
+    console.log('Creating/updating products...');
+    await Promise.all(
+      products.map(product =>
+        Product.findOneAndUpdate(
+          { sku: product.sku },
+          product,
+          { upsert: true, new: true }
+        )
+      )
+    );
 
     // Activer tous les produits
     await Product.updateMany({}, { isActive: true });
-    // Créer les paramètres admin par défaut
-    const adminSettings = new AdminSettings({});
-    await adminSettings.save();
+    
+    // Créer ou mettre à jour les paramètres admin par défaut
+    await AdminSettings.findOneAndUpdate(
+      {},
+      {},
+      { upsert: true, new: true }
+    );
 
     console.log('\n✅ Database seeded successfully!');
     console.log('📊 Summary:');
     console.log(`   - 👤 1 admin user created`);
     console.log(`   - 🏷️ ${categories.length} categories created`);
+    console.log(`   - 📦 ${productTypes.length} product types created`);
     console.log(`   - 🛋️ ${products.length} products created`);
     console.log(`   - ⚙️ Admin settings initialized`);
     console.log('\n🔑 Login credentials:');

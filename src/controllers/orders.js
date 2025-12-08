@@ -83,6 +83,17 @@ const createOrder = async (req, res) => {
 
         console.log('📝 Création d\'une réservation Kredika pour la commande:', externalOrderRef);
 
+        // Récupérer firstName et lastName (ou les extraire de name)
+        let firstName = req.user.firstName;
+        let lastName = req.user.lastName;
+        
+        // Si firstName/lastName n'existent pas, extraire de name
+        if (!firstName || !lastName) {
+          const nameParts = (req.user.name || '').split(' ');
+          firstName = nameParts[0] || 'Client';
+          lastName = nameParts[1] || '';
+        }
+
         // Créer la réservation Kredika
         const kredikaReservation = await kredikaService.createReservation({
           externalOrderRef,
@@ -90,8 +101,8 @@ const createOrder = async (req, res) => {
           purchaseAmount: Math.round(total * 100), // Montant en centimes
           installmentCount: installments,
           customerEmail: req.user.email,
-          customerFirstName: req.user.firstName,
-          customerLastName: req.user.lastName
+          customerFirstName: firstName,
+          customerLastName: lastName
         });
 
         console.log('✅ Réservation Kredika créée:', {

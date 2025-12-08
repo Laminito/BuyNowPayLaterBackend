@@ -18,6 +18,7 @@ const uploadRoutes = require('./routes/uploads');
 const webhookRoutes = require('./routes/webhooks');
 const adminRoutes = require('./routes/admin');
 const categoryRoutes = require('./routes/categories');
+const productTypeRoutes = require('./routes/productTypes');
 
 // Import des middlewares
 const errorHandler = require('./middleware/errorHandler');
@@ -102,6 +103,7 @@ app.use('/api/v1/uploads', uploadRoutes);
 app.use('/api/v1/webhooks', webhookRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/product-types', productTypeRoutes);
 
 // Legacy API routes (for backward compatibility)
 app.use('/api/auth', authRoutes);
@@ -114,6 +116,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/product-types', productTypeRoutes);
 
 // Swagger Documentation
 app.use('/api/docs', swaggerUi.serve);

@@ -1,0 +1,192 @@
+{
+  "payload_minimal": {
+    "description": "Payload minimal - champs obligatoires seulement",
+    "endpoint": "POST /api/v1/admin/products",
+    "body": {
+      "name": "Nouveau Canapé",
+      "description": "Canapé confortable 3 places",
+      "price": 285000,
+      "category": "64b123f456789abc12345678",
+      "sku": "CANAPE-NEW-001",
+      "images": [
+        {
+          "url": "https://images.unsplash.com/photo-1628624998771-ed120a552e74?q=80&w=1170",
+          "publicId": "canape-new-1",
+          "alt": "Canapé 3 places"
+        }
+      ]
+    }
+  },
+
+  "payload_complet": {
+    "description": "Payload complet avec tous les champs",
+    "endpoint": "POST /api/v1/admin/products",
+    "body": {
+      "name": "Salon Premium Gris et Or",
+      "description": "Grand salon d'angle 7 places en tissu premium avec finitions dorées",
+      "price": 520000,
+      "originalPrice": 600000,
+      "discount": 13,
+      "category": "64b123f456789abc12345678",
+      "sku": "SALON-PREMIUM-GREY-001",
+      "images": [
+        {
+          "url": "https://images.unsplash.com/photo-1628624998771-ed120a552e74?q=80&w=1170&auto=format&fit=crop",
+          "publicId": "salon-premium-1",
+          "alt": "Salon premium vue générale"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1673014200221-524696a1edd9?q=80&w=1231&auto=format&fit=crop",
+          "publicId": "salon-premium-2",
+          "alt": "Salon premium détail"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1074&auto=format&fit=crop",
+          "publicId": "salon-premium-3",
+          "alt": "Salon premium coin"
+        }
+      ],
+      "video": {
+        "url": "https://example.com/videos/salon-premium-video.mp4",
+        "publicId": "salon-premium-video-1",
+        "thumbnail": "https://example.com/thumbnails/salon-premium-video.jpg",
+        "duration": 45,
+        "fileSize": 15728640
+      },
+      "dimensions": {
+        "length": 300,
+        "width": 250,
+        "height": 90,
+        "weight": 180
+      },
+      "materials": [
+        "Tissu premium",
+        "Bois massif",
+        "Pieds métal doré"
+      ],
+      "colors": [
+        "Gris clair",
+        "Or"
+      ],
+      "inStock": true,
+      "stockQuantity": 5,
+      "brand": "Luxury Living Premium",
+      "tags": [
+        "salon",
+        "angle",
+        "7 places",
+        "premium",
+        "gris",
+        "or"
+      ],
+      "featured": true,
+      "isActive": true
+    }
+  },
+
+  "payload_avec_image_locale": {
+    "description": "Payload avec image téléchargée localement",
+    "endpoint": "POST /api/v1/admin/products (multipart/form-data)",
+    "note": "À utiliser avec FormData en frontend",
+    "body": {
+      "name": "Bureau Moderne Blanc",
+      "description": "Bureau design blanc avec rangements intégrés",
+      "price": 145000,
+      "originalPrice": 165000,
+      "discount": 12,
+      "category": "64b123f456789abc12345678",
+      "sku": "BUREAU-BLANC-NEW-001",
+      "images": [
+        {
+          "file": "image_bureau_1.jpg",
+          "publicId": "bureau-blanc-new-1",
+          "alt": "Bureau blanc vue générale"
+        }
+      ],
+      "dimensions": {
+        "length": 140,
+        "width": 60,
+        "height": 75,
+        "weight": 40
+      },
+      "materials": [
+        "MDF",
+        "Métal"
+      ],
+      "colors": [
+        "Blanc",
+        "Gris"
+      ],
+      "inStock": true,
+      "stockQuantity": 20,
+      "brand": "Home Office",
+      "tags": [
+        "bureau",
+        "moderne",
+        "blanc",
+        "télétravail"
+      ],
+      "featured": false,
+      "isActive": true
+    }
+  },
+
+  "payload_minimal_avec_url": {
+    "description": "Payload minimal avec URL d'image",
+    "endpoint": "POST /api/v1/admin/products",
+    "body": {
+      "name": "Chambre Scandinave Blanc",
+      "description": "Ensemble chambre style scandinave en blanc",
+      "price": 380000,
+      "category": "64b123f456789abc12345678",
+      "sku": "CHAMBRE-SCANDI-NEW-001",
+      "images": [
+        {
+          "url": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?q=80&w=1171&auto=format&fit=crop",
+          "publicId": "chambre-scandi-new-1",
+          "alt": "Chambre scandinave"
+        }
+      ]
+    }
+  },
+
+  "payload_update": {
+    "description": "Payload pour mettre à jour un produit",
+    "endpoint": "PUT /api/v1/admin/products/{productId}",
+    "body": {
+      "name": "Salon Premium Gris et Or - Updated",
+      "price": 515000,
+      "discount": 14,
+      "stockQuantity": 3,
+      "featured": true,
+      "isActive": true
+    }
+  },
+
+  "payload_delete": {
+    "description": "Payload pour supprimer un produit",
+    "endpoint": "DELETE /api/v1/admin/products/{productId}",
+    "note": "Pas de body requis"
+  },
+
+  "get_all_categories": {
+    "description": "Pour obtenir les ID des catégories disponibles",
+    "endpoint": "GET /api/v1/categories",
+    "note": "Utilise les IDs retournés dans le champ 'category'"
+  },
+
+  "request_headers": {
+    "Authorization": "Bearer {JWT_TOKEN}",
+    "Content-Type": "application/json"
+  },
+
+  "notes": {
+    "images": "Tu peux utiliser soit une URL (champ 'url') soit télécharger un fichier local",
+    "sku": "Doit être unique pour chaque produit",
+    "category": "Doit être un ID MongoDB valide",
+    "price": "En cents (285000 = 2850 XOF)",
+    "discount": "Pourcentage entre 0 et 100",
+    "publicId": "Identifiant unique pour chaque image",
+    "authentication": "Nécessite un JWT token d'admin"
+  }
+}
